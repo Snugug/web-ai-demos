@@ -264,7 +264,10 @@ export function createGameStore(): GameStore {
     if (!getCanUseHelp()) return false;
 
     const unrevealedIndices = [0, 1, 2, 3, 4].filter(i => !isLocked[i]);
-    const chosenIndex = unrevealedIndices[0];
+    if (unrevealedIndices.length === 0) return false;
+
+    const randomIndex = Math.floor(Math.random() * unrevealedIndices.length);
+    const chosenIndex = unrevealedIndices[randomIndex];
 
     isLocked[chosenIndex] = true;
     activeRow[chosenIndex] = secretWord[chosenIndex].toUpperCase();

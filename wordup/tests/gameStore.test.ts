@@ -571,28 +571,18 @@ describe('Game Store', () => {
     expect(success).toBe(true);
     expect(store.state.helpActionsUsed).toBe(1);
     expect(store.state.score).toBe(9);
-    expect(store.state.isLocked[0]).toBe(true);
-    expect(store.state.activeRow[0]).toBe('P');
+    const lockedIdx = store.state.isLocked.findIndex(l => l);
+    expect(lockedIdx).toBeGreaterThanOrEqual(0);
+    expect(store.state.activeRow[lockedIdx]).toBe('PLANT'[lockedIdx]);
     expect(saveStats).toHaveBeenCalledWith({ streak: 0, score: 9, highScore: 10, difficulty: 'hard', allowDuplicates: false });
 
-    expect(saveSession).toHaveBeenLastCalledWith({
-      guesses: [
-        [
-          { letter: 'C', status: 'absent' },
-          { letter: 'R', status: 'absent' },
-          { letter: 'O', status: 'absent' },
-          { letter: 'W', status: 'absent' },
-          { letter: 'D', status: 'absent' }
-        ]
-      ],
-      activeRow: ['P', '', '', '', ''],
-      isLocked: [true, false, false, false, false],
+    expect(saveSession).toHaveBeenLastCalledWith(expect.objectContaining({
       gameStatus: 'playing',
       secretWord: 'PLANT',
       helpActionsUsed: 1,
       difficulty: 'hard',
       allowDuplicates: false
-    });
+    }));
   });
 
   it('should enforce a flat total of 3 help actions per game and not reveal the last letter', async () => {
@@ -613,11 +603,12 @@ describe('Game Store', () => {
     await store.submitGuess();
 
     // Row 2 - take 3 hints in sequence
-    expect(await store.useHelpAction()).toBe(true); // reveals 'P' (idx 0)
-    expect(await store.useHelpAction()).toBe(true); // reveals 'L' (idx 1)
-    expect(await store.useHelpAction()).toBe(true); // reveals 'A' (idx 2)
+    expect(await store.useHelpAction()).toBe(true);
+    expect(await store.useHelpAction()).toBe(true);
+    expect(await store.useHelpAction()).toBe(true);
     expect(store.state.helpActionsUsed).toBe(3);
-    expect(store.state.activeRow).toEqual(['P', 'L', 'A', '', '']);
+    expect(store.state.isLocked.filter(l => l).length).toBe(3);
+    expect(store.state.activeRow.filter((c, i) => store.state.isLocked[i] && c === 'PLANT'[i]).length).toBe(3);
     expect(store.canUseHelp).toBe(false); // Cap reached
 
     // 4th hint fails because cap of 3 reached
@@ -641,9 +632,10 @@ describe('Game Store', () => {
     expect(store.state.isLocked).toEqual([true, true, true, false, false]);
     expect(store.canUseHelp).toBe(true);
 
-    // 1st Help reveals position 3 ('N')
+    // 1st Help reveals position 3 ('N') or position 4 ('T')
     expect(await store.useHelpAction()).toBe(true);
-    expect(store.state.activeRow).toEqual(['P', 'L', 'A', 'N', '']);
+    expect(store.state.isLocked.filter(l => l).length).toBe(4);
+    expect(store.state.activeRow[3] === 'N' || store.state.activeRow[4] === 'T').toBe(true);
 
     // Now only index 4 ('T') is unrevealed (count = 1). Help must refuse!
     expect(store.canUseHelp).toBe(false);

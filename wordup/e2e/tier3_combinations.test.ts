@@ -103,7 +103,9 @@ describe('Wordup PWA E2E Tier 3: Cross-Feature Combinations', () => {
       await harness.clickButton('?');
 
       let activeRow = await harness.getActiveRow();
-      expect(activeRow[0]).toBe('G');
+      const revealedChar = activeRow.find(c => c !== '');
+      expect(revealedChar).toBeDefined();
+      expect('GRAPE').toContain(revealedChar!);
 
       // 2. Now start a game with duplicates enabled (allowDuplicates = true)
       if (!checkbox.checked) {
@@ -123,7 +125,9 @@ describe('Wordup PWA E2E Tier 3: Cross-Feature Combinations', () => {
       await harness.clickButton('?');
 
       activeRow = await harness.getActiveRow();
-      expect(activeRow[0]).toBe('L');
+      const secondRevealedChar = activeRow.find(c => c !== '');
+      expect(secondRevealedChar).toBeDefined();
+      expect('LEMON').toContain(secondRevealedChar!);
     } finally {
       await harness.cleanup();
     }
@@ -142,11 +146,16 @@ describe('Wordup PWA E2E Tier 3: Cross-Feature Combinations', () => {
       await harness.typeWord('STARE');
       await harness.clickButton('GUESS!');
 
-      // Trigger HELP: position 0, 2, 4 are already locked (S, A, E). Unrevealed candidate is position 1 ('L').
+      // Trigger HELP: position 0, 2, 4 are already locked (S, A, E). Unrevealed candidates are position 1 ('L') or position 3 ('T').
       await harness.clickButton('?');
 
       const activeRow = await harness.getActiveRow();
-      expect(activeRow).toEqual(['S', 'L', 'A', '', 'E']);
+      expect(activeRow[0]).toBe('S');
+      expect(activeRow[2]).toBe('A');
+      expect(activeRow[4]).toBe('E');
+      const hasL = activeRow[1] === 'L';
+      const hasT = activeRow[3] === 'T';
+      expect(hasL || hasT).toBe(true);
     } finally {
       await harness.cleanup();
     }
@@ -256,7 +265,12 @@ describe('Wordup PWA E2E Tier 3: Cross-Feature Combinations', () => {
       await harness.clickButton('?');
 
       let activeRow = await harness.getActiveRow();
-      expect(activeRow).toEqual(['P', 'E', 'A', 'C', '']);
+      expect(activeRow[0]).toBe('P');
+      expect(activeRow[1]).toBe('E');
+      expect(activeRow[2]).toBe('A');
+      const hasC = activeRow[3] === 'C';
+      const hasH = activeRow[4] === 'H';
+      expect(hasC || hasH).toBe(true);
 
       // Type the full word 'PEACH' into active row to fill position 4 'H'
       await harness.typeWord('PEACH');

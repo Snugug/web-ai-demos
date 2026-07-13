@@ -163,9 +163,11 @@ describe('Milestone 4.1 Reactivity & Rendering Stress Tests', () => {
       // 2. Click the help button
       await harness.clickButton('?');
 
-      // 3. Verify position 0 ('A') is revealed and locked
+      // 3. Verify a random missing letter in APPLE is revealed and locked in active row (grid[1])
       const grid = await harness.getGridState();
-      expect(grid[1].map(c => c.letter)[0]).toBe('A');
+      const revealedCell = grid[1].find(c => c.letter !== '');
+      expect(revealedCell).toBeDefined();
+      expect('APPLE').toContain(revealedCell!.letter);
     } finally {
       await harness.cleanup();
     }

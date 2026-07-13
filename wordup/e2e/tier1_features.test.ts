@@ -457,7 +457,9 @@ describe('Tier 1 Feature Coverage E2E Tests', () => {
         await harness.clickButton('?');
 
         const activeRow = await harness.getActiveRow();
-        expect(activeRow[0]).toBe('A');
+        const revealedChar = activeRow.find(c => c !== '');
+        expect(revealedChar).toBeDefined();
+        expect('APPLE').toContain(revealedChar!);
       } finally {
         await harness.cleanup();
       }
@@ -472,7 +474,9 @@ describe('Tier 1 Feature Coverage E2E Tests', () => {
         await harness.clickButton('?');
 
         const activeRow = await harness.getActiveRow();
-        expect(activeRow[0]).toBe('A');
+        const revealedChar = activeRow.find(c => c !== '');
+        expect(revealedChar).toBeDefined();
+        expect('APPLE').toContain(revealedChar!);
       } finally {
         await harness.cleanup();
       }

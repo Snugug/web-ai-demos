@@ -476,9 +476,9 @@ describe('Wordup PWA - Tier 2 Boundary & Corner Cases E2E Tests', () => {
         await harness.clickButton('?');
         await harness.clickButton('?');
 
-        // Position 3 'L' and position 4 'E' were remaining, but after 3 hints (locking 0,1,2), position 3 remains unrevealed because unrevealedCount=1
+        // Positions 0, 1, 2 locked + 1 random hint revealed = 4 revealed letters. 1 remains unrevealed, disabling help button.
         const activeRow = await harness.getActiveRow();
-        expect(activeRow.slice(0, 3)).toEqual(['A', 'P', 'P']);
+        expect(activeRow.filter(c => c !== '').length).toBe(4);
         expect(helpButton?.disabled).toBe(true);
       } finally {
         await harness.cleanup();

@@ -120,8 +120,10 @@ describe('Wordup PWA - Adversarial and Coverage Hardening Tests', () => {
 
       const activeRow = await harness.getActiveRow();
 
-      // Secret word is APPLE. Position 0 ('A') is revealed in active row
-      expect(activeRow[0]).toBe('A');
+      // Secret word is APPLE. A random unrevealed letter is revealed in active row
+      const revealedChar = activeRow.find(c => c !== '');
+      expect(revealedChar).toBeDefined();
+      expect('APPLE').toContain(revealedChar!);
     } finally {
       await harness.cleanup();
     }
