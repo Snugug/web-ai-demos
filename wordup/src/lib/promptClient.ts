@@ -225,7 +225,7 @@ export async function getSuggestions(
     }
 
     const promptParts: string[] = [];
-    promptParts.push("You are an expert English lexicographer helping a player in a Wordle-style game.");
+    promptParts.push("You are an expert English lexicographer helping a player in a 5-letter word puzzle game.");
     promptParts.push("\nCRITICAL MANDATORY RULES:");
     promptParts.push("- Every word MUST be a real, authentic 5-letter English dictionary word.");
     promptParts.push("- STRICTLY FORBIDDEN: Made-up words, pseudowords, or artificial letter combinations.");
