@@ -84,7 +84,15 @@ export async function generateWord(
         minItems: 20,
         maxItems: 20
       };
-      const promptText = `Generate exactly 20 different 5-letter English words that are ${difficultyWord} to guess, ${duplicateClause}. Proper nouns, abbreviations, or combinations of random letters are strictly forbidden. Return only the words as a JSON array of strings in all uppercase. Do not include any introductory or concluding text, explanations, or formatting. Example format: ["WORD1", "WORD2", "WORD3", "WORD4", "WORD5"]`;
+      const promptText = `Generate exactly 20 different 5-letter English words that are ${difficultyWord} to guess, ${duplicateClause}.
+
+CRITICAL MANDATORY RULES:
+1. Every word MUST be a real, authentic 5-letter English dictionary word found in standard English dictionaries.
+2. STRICTLY FORBIDDEN: Made-up words, pseudowords, invented words, or artificial letter combinations (e.g. NO "PLORB", "BLINT", "ZORBA").
+3. STRICTLY FORBIDDEN: Proper nouns, names of people, places, cities, countries, brands, or days/months (e.g. NO "PARIS", "TOKYO", "PETER", "MARCH").
+4. STRICTLY FORBIDDEN: Abbreviations, acronyms, slang, or non-English words.
+
+Return ONLY the words as a JSON array of 20 uppercase strings. Example format: ["WORD1", "WORD2", "WORD3", "WORD4", "WORD5"]`;
 
       debugLog(`[AI WORD GENERATION] Attempt ${attempts}/${maxAttempts}`);
       debugLog(`[AI WORD GENERATION] Prompt: "${promptText}"`);
@@ -217,7 +225,13 @@ export async function getSuggestions(
     }
 
     const promptParts: string[] = [];
-    promptParts.push("You are playing a word guessing game similar to Wordle. The secret word is a valid 5-letter English word. The following are HARD CONSTRAINTS for choosing words:\n\n- No proper nouns, abbreviations, or combinations of random letters");
+    promptParts.push("You are an expert English lexicographer helping a player in a Wordle-style game.");
+    promptParts.push("\nCRITICAL MANDATORY RULES:");
+    promptParts.push("- Every word MUST be a real, authentic 5-letter English dictionary word.");
+    promptParts.push("- STRICTLY FORBIDDEN: Made-up words, pseudowords, or artificial letter combinations.");
+    promptParts.push("- STRICTLY FORBIDDEN: Proper nouns (names of people, places, cities, countries, brands, or days/months like PARIS, TOKYO, PETER, MARCH).");
+    promptParts.push("- STRICTLY FORBIDDEN: Abbreviations, acronyms, or non-English words.");
+    promptParts.push("\nHARD GAME CONSTRAINTS:");
     
     if (allowDuplicates) {
       promptParts.push("- Duplicate letters are allowed in the word.");
