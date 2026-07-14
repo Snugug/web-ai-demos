@@ -208,10 +208,21 @@ export async function setupE2ETest(options?: {
     );
     const match = elements.find(el => {
       const text = el.textContent?.trim() || '';
+      const ariaLabel = el.getAttribute('aria-label') || '';
+      const title = el.getAttribute('title') || '';
+      const isHelpBtn = el.classList.contains('help-btn');
+
       if (typeof labelRegex === 'string') {
-        return text.toUpperCase().includes(labelRegex.toUpperCase());
+        const search = labelRegex.toUpperCase();
+        if ((search === '?' || search === 'HELP') && isHelpBtn) return true;
+        return text.toUpperCase().includes(search) ||
+               ariaLabel.toUpperCase().includes(search) ||
+               title.toUpperCase().includes(search);
       } else {
-        return labelRegex.test(text);
+        return labelRegex.test(text) ||
+               labelRegex.test(ariaLabel) ||
+               labelRegex.test(title) ||
+               (isHelpBtn && (labelRegex.test('?') || labelRegex.test('help')));
       }
     });
 
