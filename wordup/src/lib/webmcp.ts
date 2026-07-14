@@ -154,51 +154,53 @@ export function registerWebMCPTools(game: GameStore, options?: WebMCPRegisterToo
     { signal }
   );
 
-  // 5. apply_hint
-  modelContext.registerTool(
-    {
-      name: 'apply_hint',
-      description: 'Apply a help hint to reveal one missing letter in the right spot (costs 1 point).',
-      inputSchema: {
-        type: 'object',
-        properties: {}
-      },
-      async execute() {
-        if (!game.canUseHelp) {
-          return {
-            success: false,
-            message: 'Help is currently unavailable (first turn, 3 hints limit reached, or only 1 missing letter remains).'
-          };
-        }
-
-        const prevLocked = [...game.state.isLocked];
-        const success = await game.useHelpAction();
-        const newLocked = [...game.state.isLocked];
-        const newActiveRow = [...game.state.activeRow];
-
-        let revealedIndex = -1;
-        let revealedLetter = '';
-        for (let i = 0; i < 5; i++) {
-          if (!prevLocked[i] && newLocked[i]) {
-            revealedIndex = i;
-            revealedLetter = newActiveRow[i];
-            break;
-          }
-        }
-
+  // 5. reveal_a_letter (and aliases: reveal_letter, apply_hint)
+  const revealLetterToolDef = {
+    name: 'reveal_a_letter',
+    description:
+      'Reveal one missing letter in its exact correct position on the active game board (costs 1 point from score). Highly recommended when you are stuck, having difficulty guessing the secret word, have few correct letters, or are on your last or second-to-last guess (e.g. 5th or 6th attempt). Using this tool gives you a critical anchor letter to save your game and preserve your streak!',
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    },
+    async execute() {
+      if (!game.canUseHelp) {
         return {
-          success,
-          revealedIndex,
-          revealedLetter,
-          activeRow: newActiveRow,
-          isLocked: newLocked,
-          helpActionsUsed: game.state.helpActionsUsed,
-          score: game.state.score
+          success: false,
+          message: 'Help is currently unavailable (first turn, 3 hints limit reached, or only 1 missing letter remains).'
         };
       }
-    },
-    { signal }
-  );
+
+      const prevLocked = [...game.state.isLocked];
+      const success = await game.useHelpAction();
+      const newLocked = [...game.state.isLocked];
+      const newActiveRow = [...game.state.activeRow];
+
+      let revealedIndex = -1;
+      let revealedLetter = '';
+      for (let i = 0; i < 5; i++) {
+        if (!prevLocked[i] && newLocked[i]) {
+          revealedIndex = i;
+          revealedLetter = newActiveRow[i];
+          break;
+        }
+      }
+
+      return {
+        success,
+        revealedIndex,
+        revealedLetter,
+        activeRow: newActiveRow,
+        isLocked: newLocked,
+        helpActionsUsed: game.state.helpActionsUsed,
+        score: game.state.score
+      };
+    }
+  };
+
+  modelContext.registerTool(revealLetterToolDef, { signal });
+  modelContext.registerTool({ ...revealLetterToolDef, name: 'reveal_letter' }, { signal });
+  modelContext.registerTool({ ...revealLetterToolDef, name: 'apply_hint' }, { signal });
 
   // 6. get_stats
   modelContext.registerTool(
@@ -247,7 +249,7 @@ export function registerWebMCPTools(game: GameStore, options?: WebMCPRegisterToo
   modelContext.registerTool(
     {
       name: 'get_game_state',
-      description: 'Get the overall current game state including an ordered list of previous guesses, current active row, locked positions, and game status.',
+      description: 'Get the overall current game state including an ordered list of previous guesses, current active row, locked positions, guesses count, and whether letter reveals (reveal_a_letter) are available.',
       inputSchema: {
         type: 'object',
         properties: {}
@@ -310,56 +312,33 @@ export function registerWebMCPTools(game: GameStore, options?: WebMCPRegisterToo
     { signal }
   );
 
-  // 11. get_hints_info
-  modelContext.registerTool(
-    {
-      name: 'get_hints_info',
-      description: 'Get information on hint usage, including how many hints have been used and how many hints are left.',
-      inputSchema: {
-        type: 'object',
-        properties: {}
-      },
-      execute() {
-        const maxHints = 3;
-        const hintsUsed = game.state.helpActionsUsed;
-        const hintsRemaining = Math.max(0, maxHints - hintsUsed);
-        return {
-          hintsUsed,
-          hintsRemaining,
-          hintsLeft: hintsRemaining,
-          maxHints,
-          canUseHelp: game.canUseHelp
-        };
-      },
-      annotations: { readOnlyHint: true }
+  // 11. get_reveal_letter_info (and aliases: get_hints_info, get_hint_status, get_reveal_letter_status)
+  const revealLetterInfoToolDef = {
+    name: 'get_reveal_letter_info',
+    description:
+      'Check status and remaining count of letter reveal hints available in the active game (up to 3 total per game). Highly recommended to check when stuck, unsure of remaining word choices, or down to your final guesses to verify if reveal_a_letter is available.',
+    inputSchema: {
+      type: 'object',
+      properties: {}
     },
-    { signal }
-  );
+    execute() {
+      const maxHints = 3;
+      const hintsUsed = game.state.helpActionsUsed;
+      const hintsRemaining = Math.max(0, maxHints - hintsUsed);
+      return {
+        hintsUsed,
+        hintsRemaining,
+        hintsLeft: hintsRemaining,
+        maxHints,
+        canUseHelp: game.canUseHelp
+      };
+    },
+    annotations: { readOnlyHint: true }
+  };
 
-  // 12. get_hint_status
-  modelContext.registerTool(
-    {
-      name: 'get_hint_status',
-      description: 'Get status on hints, including how many hints have been used and how many hints are left.',
-      inputSchema: {
-        type: 'object',
-        properties: {}
-      },
-      execute() {
-        const maxHints = 3;
-        const hintsUsed = game.state.helpActionsUsed;
-        const hintsRemaining = Math.max(0, maxHints - hintsUsed);
-        return {
-          hintsUsed,
-          hintsRemaining,
-          hintsLeft: hintsRemaining,
-          maxHints,
-          canUseHelp: game.canUseHelp
-        };
-      },
-      annotations: { readOnlyHint: true }
-    },
-    { signal }
-  );
+  modelContext.registerTool(revealLetterInfoToolDef, { signal });
+  modelContext.registerTool({ ...revealLetterInfoToolDef, name: 'reveal_letter_status' }, { signal });
+  modelContext.registerTool({ ...revealLetterInfoToolDef, name: 'get_hints_info' }, { signal });
+  modelContext.registerTool({ ...revealLetterInfoToolDef, name: 'get_hint_status' }, { signal });
 }
 

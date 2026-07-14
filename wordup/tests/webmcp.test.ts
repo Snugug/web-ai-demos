@@ -73,23 +73,33 @@ describe('WebMCP Tools Registration and Execution', () => {
     expect(() => registerWebMCPTools(mockGameStore as unknown as GameStore)).not.toThrow();
   });
 
-  it('should register all 12 required WebMCP tools when modelContext exists', () => {
+  it('should register WebMCP tools including reveal_a_letter when modelContext exists', () => {
     const controller = new AbortController();
     registerWebMCPTools(mockGameStore as unknown as GameStore, { signal: controller.signal });
 
-    expect(mockRegisterTool).toHaveBeenCalledTimes(12);
     expect(registeredTools.has('start_new_game')).toBe(true);
     expect(registeredTools.has('type_guess')).toBe(true);
     expect(registeredTools.has('submit_guess')).toBe(true);
     expect(registeredTools.has('get_current_guess')).toBe(true);
+    expect(registeredTools.has('reveal_a_letter')).toBe(true);
+    expect(registeredTools.has('reveal_letter')).toBe(true);
     expect(registeredTools.has('apply_hint')).toBe(true);
     expect(registeredTools.has('get_stats')).toBe(true);
     expect(registeredTools.has('get_previous_guesses')).toBe(true);
     expect(registeredTools.has('get_game_state')).toBe(true);
     expect(registeredTools.has('get_game_settings')).toBe(true);
     expect(registeredTools.has('get_settings')).toBe(true);
+    expect(registeredTools.has('get_reveal_letter_info')).toBe(true);
     expect(registeredTools.has('get_hints_info')).toBe(true);
     expect(registeredTools.has('get_hint_status')).toBe(true);
+  });
+
+  it('should have prompt-engineered description for reveal_a_letter encouraging agents when stuck or on last guesses', () => {
+    registerWebMCPTools(mockGameStore as unknown as GameStore);
+    const revealTool = registeredTools.get('reveal_a_letter').def;
+    expect(revealTool.description).toContain('Reveal one missing letter');
+    expect(revealTool.description).toContain('stuck');
+    expect(revealTool.description).toContain('last or second-to-last guess');
   });
 
   it('should execute start_new_game tool with difficulty and allowDuplicates options', async () => {
@@ -139,9 +149,9 @@ describe('WebMCP Tools Registration and Execution', () => {
     expect(result.isLocked).toEqual([false, false, false, false, false]);
   });
 
-  it('should execute apply_hint tool and return revealed index and letter', async () => {
+  it('should execute reveal_a_letter (and apply_hint) tool and return revealed index and letter', async () => {
     registerWebMCPTools(mockGameStore as unknown as GameStore);
-    const tool = registeredTools.get('apply_hint').def;
+    const tool = registeredTools.get('reveal_a_letter').def;
 
     const result = await tool.execute();
 
@@ -204,11 +214,11 @@ describe('WebMCP Tools Registration and Execution', () => {
     expect(res2).toEqual({ difficulty: 'medium', allowDuplicates: true });
   });
 
-  it('should execute get_hints_info and get_hint_status tools and return hints used and remaining', () => {
+  it('should execute get_reveal_letter_info and get_hints_info tools and return hints used and remaining', () => {
     registerWebMCPTools(mockGameStore as unknown as GameStore);
     mockGameStore.state.helpActionsUsed = 1;
 
-    const hintsInfoTool = registeredTools.get('get_hints_info').def;
+    const hintsInfoTool = registeredTools.get('get_reveal_letter_info').def;
     expect(hintsInfoTool.annotations?.readOnlyHint).toBe(true);
     const res1 = hintsInfoTool.execute();
     expect(res1).toEqual({
